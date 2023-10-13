@@ -4,27 +4,41 @@ using UnityEngine;
 
 public class PerlinNoise : MonoBehaviour
 {
-    public int octaves;
-    private float persistances = 1f;
+    [SerializeField] private int octaves;
+    [SerializeField] private float persistances = 1f;
+    [SerializeField] GameObject linePrefab;
+
+    private LineRenderer lineRenderer;
+    private Vector3 linePosition;
+    private GameObject goLine;
+
+    void Start()
+    {
+        goLine = Instantiate(linePrefab, gameObject.transform.position, gameObject.transform.rotation);
+        lineRenderer = goLine.GetComponent<LineRenderer>();
+    }
 
     void Update()
     {
-        Vector2 quad = new Vector2(gameObject.transform.position.x, gameObject.transform.position.y);
-        float x = PerlinNoise1(quad.x, persistances, octaves);  // 설정에 대한 최종 값 반환
-        quad.y = x;
-        quad.x += 0.002f;
-        gameObject.transform.position = quad;
+        float x = PerlinNoise_1(linePosition.x, persistances, octaves);  // 설정에 대한 최종 값 반환
+        //print(x);
+
+        lineRenderer.positionCount++;
+        linePosition = new Vector3(linePosition.x += 0.003f, x, 0);
+        lineRenderer.SetPosition(lineRenderer.positionCount - 1, linePosition);
+        Camera.main.transform.position = new Vector3(linePosition.x, 0, -3);
     }
 
     public float Noise(int x)  // -1~1 사이 부동소수
     {
         x = (x << 13) ^ x;
         return 1f - ((x * (x * x * 15731 + 789221) + 1373312589) & 0x3f3f3f3f) / 333731800f;
+        //return Mathf.PerlinNoise(0, x) * 2 - 1;
     }
 
     public float Sigmoid(float x)
     {
-        return x * x * x * (x * (x * 6 - 15) + 10);
+        return x * x * x * (x * (x * 6 - 15) + 10);  // 6x^5 - 15x^4 + 10x^3
     }
 
     public float CoherentNoise(int x)
@@ -61,7 +75,7 @@ public class PerlinNoise : MonoBehaviour
         return a * (1f - y) + b * y;  // a와 b 사이의 어떤 값
     }
 
-    public float PerlinNoise1(float x, float persistance, int octaves)
+    public float PerlinNoise_1(float x, float persistance, int octaves)
     {
         float total = 0;
         float p = persistance;
